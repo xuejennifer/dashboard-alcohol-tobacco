@@ -1,0 +1,828 @@
+---
+title: "Longitudinal substance preferences: Alcohol and Tobacco in the U.S."
+author: 
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    orientation: rows
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(urbnmapr)
+library(ggthemes)
+library(stringr)
+library(gganimate)
+library(forcats)
+library(transformr)
+library(geofacet)
+library(plotly)
+library(dplyr)
+library(readr)
+library(rpart)
+library(rpart.plot)
+library(jtools)
+library(broom.mixed)
+library(caret)
+library(ggstance)
+library(broom)
+library(sjPlot)
+
+setwd('~/Dropbox/516_Eels/Final_Project')
+alcohol_data = read_csv('alcohol_consumption.csv')
+tobacco_data = read_csv('tobacco.csv')
+statepop = read_csv('State_population.csv')
+alc_tobacco_data = read_csv('updated_alcohol_tobacco.csv')
+state_region = read_csv('state_to_region_mapping.csv')
+states<-read_csv("states.csv")
+```
+
+
+```{r, include=FALSE}
+#cleaning datasets - making state have capital letters
+
+alcohol_data$state <- str_to_title(alcohol_data$state) 
+alc_tobacco_data$state <- str_to_title(alc_tobacco_data$state)
+state_region$State <- str_to_title(state_region$State) 
+
+```
+
+```{r, include=FALSE}
+#cleaning datasets - appending datasets with state/region data
+#regional data
+alcohol_data %>% left_join(state_region, by = c("state" = "State")) %>% drop_na() -> alcohol_data
+tobacco_data %>% left_join(state_region, by = "State") %>% drop_na() -> tobacco_data
+alc_tobacco_data %>% left_join(state_region, by = c("state" = "State")) %>% drop_na() -> alc_tobacco_data
+
+#state population data
+alcohol_data %>% left_join(statepop, by = c("state" = "State", "year" = "Year")) -> alcohol_data
+tobacco_data %>% left_join(statepop, by = c("State" = "State", "Year" = "Year")) -> tobacco_data
+alc_tobacco_data %>% left_join(statepop, by = c("state" = "State", "year" = "Year")) -> alc_tobacco_data
+
+```
+
+```{r, include=FALSE}
+#cleaning dataset - further cleaning and manipulating alcohol dataset
+#removing rows that don't map to a specific state
+alcohol_data <- alcohol_data[-c(2143:2352), ]
+
+#identifying preferred type by state
+alcohol_data %>% 
+  mutate(preferred_type = 
+           ifelse(number_of_beers > number_of_glasses_wine & number_of_beers > number_of_shots_liquor, "Beer", 
+                  ifelse(number_of_glasses_wine > number_of_beers & number_of_glasses_wine > number_of_shots_liquor, "Wine", "Liquor"))) -> alcohol_data
+
+#tidying
+alc2 <- data.frame(alcohol_data[1:2], stack(alcohol_data[3:6]), stack(alcohol_data[7:10]), alcohol_data[11:13])
+colnames(alc2)[3] <- "per_capita_consumption"
+colnames(alc2)[4] <- "per_capita_ID"
+colnames(alc2)[5] <- "total_consumption"
+colnames(alc2)[6] <- "total_consumption_ID"
+
+alc2 %>% mutate(per_capita_ID=recode(per_capita_ID, 
+                         `ethanol_beer_gallons_per_capita`="Beer",
+                         `ethanol_wine_gallons_per_capita`="Wine", 
+                         `ethanol_spirit_gallons_per_capita` = "Spirits", 
+                         `ethanol_all_drinks_gallons_per_capita` = "All",
+                         )) -> alc2
+
+```
+
+```{r, include=FALSE}
+
+#cleaning dataset - further cleaning and manipulating tobacco dataset
+tobacco_data %>% mutate(number_smoke_everyday = `Smoke everyday`*Population, 
+                          number_smoke_some = `Smoke some days`*Population,
+                          number_smoke_former = `Former smoker`*Population,
+                          number_smoke_never = `Never smoked`*Population) -> tobacco_data
+
+#tidying
+tobacco_data %>% select(c(1:6)) %>% 
+                          pivot_longer(c(3:6), names_to="Type", values_to="percent") -> tobacco_data_long
+
+```
+
+```{r, include=FALSE}
+
+#cleaning dataset - further cleaning and manipulating combined alcohol/tobacco dataset
+alc_tobacco_data %>% mutate(number_smoke_everyday = smoke_everyday*Population, 
+                          number_smoke_some = smoke_some*Population,
+                          number_smoke_former = smoke_former*Population,
+                          number_smoke_never = smoke_never*Population) -> alc_tobacco_data
+
+```
+
+Welcome 
+=======================================================================
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Introducing the Motivation
+
+American healthcare institutions such as the National Institutes of Health (NIH) and Centers for Disease Control and Prevention (CDC) have meticulous datasets for alcohol and tobacco consumption in the United States. Yet, there are few analyses that look at consumption of these substances side-by-side over time. Through this project, we are interested in analyzing the longitudinal effects and patterns of alcohol and tobacco consumption in the U.S. across time at national, regional, and state levels. To learn more about the specific datasets used, please see [Navigating the Data and Analyses]
+
+We begin our investigation by examining alcohol and tobacco consumption trends separately at the national, regional, and state level; our analysis will transition into understanding at joint trends across both substances and will be guided by the following questions and hypotheses:  
+
+**1) What are the preferred alcohol types at the national/regional/state levels? How has this changed over time?**
+
+- The U.S. is culturally known for being a "beer country" so we hypothesize that beer will be the most consumed alcohol at any given time. 
+
+**2) How does tobacco consumption change at the national/regional/state levels, over time?**
+
+- Given the extensive public health campaigns that highlighted the negative effects of smoking cigarettes in the late 1990s and early 2000s, we expect to see smoking rates decline over time. 
+
+**3) Are there particular states that stand out, in terms of consumption of either substance?**
+
+- Since there are clear divisions of rural and urban areas within the US, which also follow closely to political identification, we predict the more rural areas of the country (South and Midwest) will drink and smoke more than the rest of the country, possibly due to conservative/traditional values and the lack of other, safer, legal alternatives.
+
+**4) Do there seem to be any substitutions between alcohol and tobacco?**
+
+- It is possible that the effectiveness of smoking campaigns results in smoking rates declining over time; thus, we hypothesize that, in turn, alcohol consumption rates would increase during and after this period. 
+
+### Our Methodology
+
+Our research methodology was driven by the aforementioned research questions. To start, we searched reputable sources for relevant data on alcohol and tobacco consumption in the United States. Our search culminated with finding the aforementioned alcohol and tobacco datasets. Next, we prepared the two datasets for analysis. To do that, we cleaned the datasets and appended them with necessary supplemental information, such as state code, corresponding region, and state population size. With the transformed datasets, we began our analysis, which used the following tools: 
+
+*1) Static and Dynamic Figures*
+
+These figures were made to visually capture alcohol and tobacco consumption trends (both together and separately) across time, states, and regions. Examples of graphs are as follows:
+
+- Line graphs, to capture trends over the years
+- Boxplots, to visualize differences across states
+- Bar charts, to compare consumption
+- Animated graphs, to illustrate dynamic change and covariance over time
+
+*2) Regressions*
+
+These statistical analysis tools were used in order to examine the validity and statistical significance of the alcohol and tobacco consumption trends, gleaned from the static and dynamic visualizations. 
+
+*3) Decision Tree and Confusion Matrices*
+
+These predictive modeling tools were used in order to examine the potential interdependence of the alcohol and tobacco consumption trends. Particularly, these tools were used to see if alcohol and tobacco consumption substituted each other or not.
+
+
+### Navigating the Data and Analyses
+
+For this investigation, we began manipulating dataframes starting with two primary datasets: alcohol and tobacco.
+
+The **raw alcohol dataset** comes from the National Institute of Alcohol Abuse and Alcoholism, via the *National Institutes of Health*. It contains state-level information about total drinks consumed and gallons per capita consumed across three alcohol types: beer, wine, and spirits. It contains data from 1977 to 2018.
+
+
+The **raw tobacco dataset** comes from a compilation of yearly surveys from the Behavioral Risk Factor Surveillance System, via the *CDC*. It contains state-level information about the percentage of of people who fall in each of the following categories: smoke never, formerly, some days, and everyday. It contains data from 1995 to 2010.
+
+
+We also utilize public datasets containing state and regional information, in order to make our alcohol and tobacco datasets suitable for analysis by appending the additional state characteristic information. 
+
+
+Using the independent datasets for alcohol and tobacco consumption, as well as a **combined dataset**, we explored our questions of interest. The *Results* section, found at the top of the webpage, will expand upon each component in our methodology as well as showcase the results obtained and how they relate to our initial research questions. 
+
+***
+
+Upon clicking on the Results section in the navigation bar, you will be able to observe the national, regional and state level trends. Each figure is accompanied by an explanation. You will also be able to locate our set of regressions that corroborate the visual insights gained from the figures. Lastly, you can view a riveting, dynamic bubble graph, accompanied by a decision tree, in the final section of Results. 
+
+
+
+
+National Trends {data-navmenu=Results}
+=======================================================================
+
+Column {data-width=350} 
+-----------------------------------------------------------------------
+
+### **It appears that tobacco consumption is dropping, whereas alcohol consumption is increasing from its lows in the mid 1990s**
+
+As we can see in the figure below, overall alcohol consumption dropped in the mid 1990s, before continuing to increase. Of note, while beer is the most consumed, consumption of beer is decreasing, whereas wine and spirits consumption are increasing. Nationally, consumption of spirits has almost overtaken beer consumption. 
+
+Let us begin the investigation into our tobacco dataset with a visualization of the trends for each category of smokers from 1995 to 2000. As we see below, the majority of people in the U.S. consistenly report never smoking. The percentages of people who `smoke some days`, as well as `former smokers`, remain quite flat in comparison to those who `smoke everyday`, which decreases slightly overtime and those who `never smoke`, which increases slightly from 2005 to 2010. At the national level, it appears that tobacco consumption is dropping, whereas alcohol consumption is increasing from its lows in the mid 1990s.
+
+Throughout this visualization of alcohol consumption trends over time, each state tends to alternate between increases and decreases in consumption. However, certain years are marked by widespread decreases, namely: 1982-1989, 1991, 1993, 2009, and 2010. Throughout this visualization of tobacco consumption trends over time, we see sporadic increases in some states. For example, Washington in 1996, California and Utah in 1997, and Maryland in 1998 all demonstrate steep increases. After 2005, states overwhelmingly decrease their smoking habits. By 2010, the final year, all but one state is shown to have a reduction in smoking.
+
+
+Row
+-----------------------------------------------------------------------
+
+
+### Alcohol
+
+```{r, echo=FALSE, message=FALSE}
+alc2 %>% group_by(year, per_capita_ID) %>% 
+  summarize(avg_drinks = mean(per_capita_consumption)) %>%
+  ggplot(aes(x=year, y=avg_drinks, color = per_capita_ID)) + 
+  geom_line() + 
+  scale_color_tableau(name = "Alcohol Type") +
+  labs(title ="Average Alcohol Consumption (National), 1977-2018", 
+       y = "Gallons per Capita", x= "Year") + ylim(0,3) +
+  theme_bw() -> natlalc
+
+ggplotly(natlalc)
+
+```
+
+### Tobacco
+
+```{r, echo=FALSE, message=FALSE}
+tobacco_data_long %>% group_by(Year, Type) %>% 
+  summarize(meanpercent = mean(percent)*100) %>% 
+  ggplot(aes(x=Year, y=meanpercent, color = Type)) + 
+  geom_line() +
+  labs(title = "Average % Tobacco Consumption (National), 1995-2010",
+       y= "Percent of Tobacco Consumption", 
+       color= "Smoker Category") + ylim(0, 65) + 
+  theme_bw() -> natltob
+
+ggplotly(natltob)
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Alcohol Interactive Slider
+
+```{r}
+#calculating % change
+alcohol_data %>% group_by(year, state) -> alc_pct_change 
+pct_change <- c(1:nrow(alc_pct_change ))*0
+for(i in 2:nrow(alc_pct_change )){
+  if(alc_pct_change $state[i] == alc_pct_change $state[i-1]){
+    pct_change[i-1] <- 
+      (alc_pct_change $ethanol_all_drinks_gallons_per_capita[i-1]/alc_pct_change$ethanol_all_drinks_gallons_per_capita[i]-1)*100
+  }
+  else {
+    pct_change[i] = NA 
+  }
+}
+alc_pct_change$pct_change = pct_change
+
+#sorting data
+alc_pct_change %>% select(state, year, pct_change) %>% group_by(state, year) -> alcpct
+  
+#sort(alcpct$year)
+sort1.alcpct <- alcpct[order(alcpct$year) , ]
+sort1.alcpct  %>%
+  inner_join(states, by = c("state" = "State")) -> alcpct_map
+
+#adding a hover text
+alcpct_map %>%mutate(hover = paste0(state, "\n", round(pct_change), "%")) -> alcpct_map
+
+names(alcpct_map)[3] <- "Change"
+
+
+#graph properties
+graph_properties <- list(
+  scope = 'usa',
+  showland = TRUE,
+  landcolor = toRGB("white"),
+  color = toRGB("white")
+)
+font = list(
+  family = "Times New Roman",
+  size = 15,
+  color = "black"
+)
+label = list(
+  bgcolor = "#EEEEEE",
+  bordercolor = "transparent",
+  font = font
+)
+
+#plotting
+percent_graph = plot_geo(alcpct_map, 
+                         locationmode = "USA-states", 
+                         frame = ~year) %>%
+  add_trace(locations = ~Code,
+            z = ~Change,
+            zmin = min(alcpct_map$Change),
+            zmax = 25,
+            color = ~Change,
+            colorscale = "Greens",
+            text = ~hover,
+            hoverinfo = 'text') %>% 
+  layout(geo=graph_properties,
+         title = "Percentage change in per capita ethanol consumption by state by year in the U.S.",
+         font = list(family = "Times New Roman")) %>%
+  config(displayModeBar = FALSE) %>%
+  style(hoverlabel = label) %>%
+  colorbar(ticksuffix = '%')
+
+
+percent_graph 
+```
+
+### Tobacco Interactive Slider
+
+```{r}
+#Calculate % change in the smoking index across the years
+tobacco_data %>% select(-`Location 1`, -Region, -Division) %>% 
+  mutate(smoke = (`Never smoked`*0 + `Former smoker`*.33 + 
+                    `Smoke some days`*.66 + `Smoke everyday`*1)) -> tobacco_ratio
+
+tobacco_ratio = merge(tobacco_ratio, state_region,by=c("State")) 
+
+tobacco_ratio %>% arrange(State, Year)->tobacco_ratio1
+
+tobacco_ratio1 %>%group_by(State,Year)-> smoke_pct_change 
+
+
+
+pct_change <- c(1:nrow(smoke_pct_change))*0
+for(i in 2:nrow(smoke_pct_change)){
+  if(smoke_pct_change$State[i] == smoke_pct_change$State[i-1]){
+    pct_change[i] <- 
+      (((smoke_pct_change$smoke[i-1]/smoke_pct_change$smoke[i])-1)*100)
+  }
+  else {
+    pct_change[i] = 0
+  }
+}
+smoke_pct_change$pct_change = pct_change
+
+
+#Slider
+smoke_pct_change %>% select(State, Year, pct_change) %>% group_by(State, Year) -> smokepct
+  
+#sort(smokepct$Year)
+sort1.smokepct <- smokepct[order(smokepct$Year) , ]
+sort1.smokepct  %>%
+  inner_join(states, by = c("State" = "State")) -> smokepct_map
+
+#adding a hover text
+smokepct_map %>% mutate(hover = paste0(State, "\n", pct_change, "%")) -> smokepct_map
+
+names(smokepct_map)[3] <- "Change"
+
+#graph properties
+graph_properties <- list(
+  scope = 'usa',
+  showland = TRUE,
+  landcolor = toRGB("white"),
+  color = toRGB("white")
+)
+font = list(
+  family = "Times New Roman",
+  size = 15,
+  color = "black"
+)
+label = list(
+  bgcolor = "#EEEEEE",
+  bordercolor = "transparent",
+  font = font
+)
+
+#plotting
+percent_smoke_graph = plot_geo(smokepct_map, 
+                         locationmode = "USA-states", 
+                         frame = ~Year) %>%
+  add_trace(locations = ~Code,
+            z = ~Change,
+            zmin = min(smokepct_map$Change),
+            zmax = max(smokepct_map$Change),
+            color = ~Change,
+            colorscale = "Greens",
+            text = ~hover,
+            hoverinfo = 'text') %>% 
+  layout(geo=graph_properties,
+         title = "Percentage change in smoking index by state by year in the U.S.",
+         font = list(family = "Times New Roman")) %>%
+  config(displayModeBar = FALSE) %>%
+  style(hoverlabel = label) %>%
+  colorbar(ticksuffix = '%')
+
+percent_smoke_graph 
+```
+
+Regional Trends {data-navmenu=Results}
+=======================================================================
+
+Column {data-width=350} 
+-----------------------------------------------------------------------
+### **Here, we consider the average alcohol consumption aggregated across the U.S. continental regions: Midwest, Northeast, South, and West** 
+
+As we see in the figure below, alcohol consumption trends by region follow a similar pattern as alcohol consumption trends at the national level. It's clear that the Northeast and West regions of the US consume more alcohol than the South and Midwest regions.
+
+There is a noticeable drop in alcohol consumption between 1995-2000. Mothers Against Drunk Driving (MADD), which was founded in 1980, supported federal legislation called Zero Tolerance. By 1998, Zero Tolerance was passed in each state. The law forbade anyone under 21 from driving with any amount of detectable alcohol. Further, MADD launched a website and convened youth summits between 1995-2000. Zero Tolerance--as well as MADD's overall gain in popularity--might partially explain the apparent drop in overall alcohol consumption in the years 1995-2000. However, the drop in overall alcohol consumption appears to be largely driven by a decrease in spirit consumption; beer and wine appear to be consumed at stable levels between 1995-2000
+
+Next, we consider the percentage of tobacco consumption aggregated across the U.S. continental regions: Midwest, Northeast, South, and West. Indeed, the trends for each category of smoker, across all regions, are also quite similar. The Northeast shows some evidence of potentially higher rates of tobacco quitting, evidenced by the higher percentage of former smokers. It is also this region showing the largest disparity between former smokers and those who smoke everyday. This visual is quite promising, showing an overall visual increase in the percentage of individuals who have never smoked and a decrease in those who smoke everyday.
+
+While the northeast and west appear to consume more alcohol, the midwest and south appear to consume more tobacco. To summarize the trends observed at the regional level, all regions have an increasing percentage of the population who have never smoked, over time. Intriguingly, the overall consumption of alcohol is rebounding from a dip between 1995 and 2000, largely fueled by a greater preference for wine and spirits.
+
+
+
+Row
+-----------------------------------------------------------------------
+
+### Alcohol
+
+```{r, echo=FALSE, message=FALSE}
+#wrapped by region, each type
+alc2 %>% 
+  group_by(year, Region, per_capita_ID) %>% 
+  summarize(avg_drinks = mean(per_capita_consumption)) %>%
+  ggplot(aes(x=year, y=avg_drinks, color = per_capita_ID)) + 
+  geom_line() + 
+  facet_grid(~Region) +
+  labs(title ="Average Alcohol Consumption (Regional), 1977-2018", 
+       y = "Gallons per Capita", x = "Year") +
+    theme(axis.text.y = element_text(hjust = -3)) +
+  scale_color_tableau(name = "Alcohol Type") +
+  theme_bw() -> alcreg
+
+ggplotly(alcreg) 
+
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+### Tobacco
+
+```{r, echo=FALSE, message=FALSE}
+tobaccoregion_data_long = merge(tobacco_data_long, state_region,by=c("State")) 
+
+tobaccoregion_data_long %>% 
+  group_by(Year, Region, Type) %>% 
+  summarize(meanpercent = mean(percent)*100) %>%
+  ggplot(aes(x=Year, y=meanpercent, color = Type)) + 
+  geom_line() + 
+  facet_grid(~Region) + 
+  labs(title ="Average Tobacco Consumption (Regional), 1995-2010", 
+       y = "Percent of Tobacco Consumption", color= "Smoker Category") +
+  theme(axis.text.y = element_text(hjust = -3)) +
+  ylim(0, 65) + theme_bw() -> tobreg
+
+ggplotly(tobreg)
+```
+
+
+State Trends {data-navmenu=Results}
+=======================================================================
+
+Column {data-width=350} 
+-----------------------------------------------------------------------
+
+### **State trends vary by alcohol type, whereas for tobacco consumption all state strend toward less consumption** 
+With regards to alcohol consumption, we observe that **New Hampshire** and **Nevada** are consistently the two states with the highest average consumption. Interestingly, the states with lowest consumption differ by type. Across all alcohol, **Utah** and **West Virginia** have the lowest overall alcohol consumption. 
+
+With regards to wine consumption, **Connecticut** and **New York** appear to drink less beer on average; however, those same two states have a relatively high average consumption of wine, and mixed preferences toward spirits. **Mississippi** and **Kansas** drink relatively less wine on average, but **Mississippi** is roughly in the middle in terms of beer consumption. 
+
+So, while certain states simply have higher alcohol consumption across all types, other states have clear preferences for a certain type(s). Almost every state drinks more beer than wine or liquor. This is likely due to its accessibility and relatively lower cost. 
+
+With regards to tobacco consumption, we visualize the percentage of individuals who report either that they `smoke everyday` or `smoke some days`. While **Utah** remains a significant outlier in consuming far less, we see that **Kentucky** and **West Virginia** are the states with the highest average consumption over time. While **Nevada** is still a relatively high consumer, **New Hampshire** is in the middle. 
+
+To summarize the trends observed at the state level, some states have high, low, or even opposite levels of consumption of both substances. More specifically, **Nevada** is both a high consumer of alcohol and tobacco. On the other hand, **Utah** has an overall low alcohol and tobacco consumption. **West Virginia** although has the lowest overall alcohol consumption, has the highest average tobacco consumption over time. 
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Alcohol - All
+
+```{r, echo = FALSE}
+
+alc2 %>% group_by(state) %>% 
+  filter(!state=="District Of Columbia") %>% 
+  summarize(avg_drinks = mean(per_capita_consumption)) %>%
+  arrange(avg_drinks) %>% 
+  mutate(state = fct_reorder(state, avg_drinks)) %>%
+  ggplot(aes(x=state, y=avg_drinks)) + geom_boxplot() +
+    theme_bw() + ylim(0, 2.5) +
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title ="Overall Alcohol Consumption per Capita, by State", 
+         subtitle ="Averaged across 1977 to 2018", y = "Gallons per Capita", x = "State")  -> alcall
+
+ggplotly(alcall)
+
+```
+
+### Alcohol - Beer
+
+```{r, echo = FALSE}
+alc2 %>% group_by(state) %>%
+  filter(!state=="District Of Columbia") %>%
+  filter(per_capita_ID == "Beer") %>% 
+  summarize(avg_beers = mean(per_capita_consumption)) %>%
+  mutate(state = fct_reorder(state, avg_beers)) %>%
+  arrange(avg_beers) %>%
+  ggplot(aes(x=state, y=avg_beers)) + geom_boxplot() +
+    theme_bw() + ylim(0, 2.5) +
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title ="Beer Consumption per Capita, by State", 
+         subtitle ="Averaged across 1977 to 2018", y = "Gallons per Capita", x = "State") -> alcbeer
+
+ggplotly(alcbeer)
+
+```
+
+### Alcohol - Wine
+
+```{r, echo = FALSE}
+
+alc2 %>% group_by(state) %>%
+  filter(!state=="District Of Columbia") %>%
+  filter(per_capita_ID == "Wine") %>%
+  summarize(avg_wine = mean(per_capita_consumption)) %>%
+   mutate(state = fct_reorder(state, avg_wine)) %>%
+  arrange(avg_wine) %>% 
+  ggplot(aes(x=state, y=avg_wine)) + geom_boxplot() +
+    theme_bw() + ylim(0, 2.5) +
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title ="Wine Consumption per Capita, by State", 
+         subtitle ="Averaged across 1977 to 2018", y = "Gallons per Capita", x = "State") -> alcwine
+
+ggplotly(alcwine)
+
+```
+
+
+### Alcohol - Spirits
+
+```{r, echo = FALSE}
+alc2 %>% group_by(state) %>%
+  filter(!state=="District Of Columbia") %>%
+  filter(per_capita_ID == "Spirits") %>%
+  summarize(avg_spirits = mean(per_capita_consumption)) %>%
+   mutate(state = fct_reorder(state, avg_spirits)) %>%
+  arrange(avg_spirits) %>% 
+  ggplot(aes(x=state, y=avg_spirits)) + geom_boxplot() +
+    theme_bw() + ylim(0, 2.5) +
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title ="Spirits Consumption per Capita, by State", 
+         subtitle = "Averaged across 1977 to 2018", y = "Gallons per Capita", x = "State") -> alcspirits
+
+ggplotly(alcspirits)
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Tobacco
+
+```{r, echo = FALSE}
+tobacco_data %>% mutate(smoking = `Smoke everyday` + `Smoke some days`) %>% 
+  filter(!(State == "Nationwide (States, DC, and Territories)" |
+             State == "Nationwide (States and DC)" |
+             State == "Guam" |
+             State == "District Of Columbia")) %>% 
+  group_by(State) %>% summarize(smoking = mean(smoking)) %>%
+  arrange(smoking) %>% 
+  mutate(state = fct_reorder(State, smoking)) %>%
+  ggplot(aes(x=state, y=smoking)) + geom_boxplot() +
+    theme_bw() + ylim(0,.35)+
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title ="Overall Tobacco Consumption, by State", subtitle ="Averaged across 1995 to 2010", 
+         y = "Percent of Tobacco Consumption", x = "State")   -> tobstate
+
+ggplotly(tobstate)
+```
+
+
+Statistical Analyses: Alcohol and Tobacco {data-navmenu=Results}
+=======================================================================
+
+**While visualizations are informative, we sought to corroborate our findings with statistical analyses.**
+
+Row
+-----------------------------------------------------------------------
+
+### Alcohol *Does this have to be revised?*
+
+```{r}
+alc3 <- alc2 %>% 
+  arrange(year) %>%
+  group_by(year) %>% 
+  filter(per_capita_ID == "All") %>%    
+  mutate(`Standard drinks consumption` = sum(total_consumption)) 
+
+alcohol_time <- lm(`Standard drinks consumption` ~ as.factor(year), data = alc3) 
+tab_model(alcohol_time, title = "Annual Alcohol Consumption")
+#summary(alcohol_time)
+#tidy(alcohol_time) %>% mutate_if(is.numeric, round, 5)
+
+```
+
+
+### Alcohol Explanation
+
+While visualizations are informative, we sought to corroborate our findings with statistical analyses.
+
+To understand changes in overall alcohol consumption, over time, we created a new variable `natl_alc`, which captures the total amount of alcohol consumption, in terms of standard drinks, across all states. 
+
+The model uses year as a factor to predict the total alcohol consumption, with the goal of determining whether there are significant changes over time. The intercept, which is for 1977, indicates estimated consumption as 29,651. The rate of total consumption increases until 1983, after which consumption significantly declines through 2018. By 2018, the total amount of alcohol consumption was down by 2,414, compared to 1977. All years were statistically significant in either the increases, from 1978 through to 1983, or the decreases, from 1984 onwards, in the total amount of alcohol consumption, compared to 1977.
+
+
+Row
+-----------------------------------------------------------------------
+
+### Tobacco  
+
+```{r}
+#create index
+tobacco_ratio = tobacco_ratio %>% mutate(`Current smokers` = (`Never smoked`*0 + `Former smoker`*0 + 
+                    `Smoke some days`*100 + `Smoke everyday`*100)) 
+tobacco_ratio = tobacco_ratio %>% mutate(`Never smoked` = `Never smoked`*100 )
+
+# (1) Smoking as a function of time and state, in the same model
+lm_smoke_yearstate <- lm(`Current smokers` ~ as.factor(Year) + State, data=tobacco_ratio)
+tab_model(lm_smoke_yearstate, title = "Smoking Rates by Year and by State")
+#summary(lm_smoke_yearstate)
+#tidy(lm_smoke_yearstate) %>% mutate_if(is.numeric, round, 5)
+
+#2
+lm_never_yearstate <- lm(`Never smoked` ~ as.factor(Year) + State, data = tobacco_ratio) #quitting rates
+tab_model(lm_never_yearstate, title = "Abstintent Rates by Year and by State")
+#summary(lm_ns_fz)
+#tidy(lm_ns_fz) %>% mutate_if(is.numeric, round, 5)
+```
+
+### Tobacco Explanation
+
+To get a better understanding of current smokers in each state, regardless of if it is an everyday or sometimes smoking habit, we created a new variable `current_smokers`, which is the combination of the `smoke some days` and `smoke everyday` variables. This variable was indexed out of 100 to make further regressions more comprehensible. 
+We also adjusted the 'Never smoked' variable to match the formatting of `current_smokers`. Both variables now can 
+be read as percentages, with *the current smoking rate being 24.56%, while 52.52% of people have never smoked.*  
+
+Our first regression (1) uses State and Year to predict the current smokers percentage. Year is set as a factor, so we can see year to year change in habits. The intercept, which captures the year **1995** and the state of **Alabama**, tells us that the estimated percentage of smokers is 24.56%. While smoking habits **rose from 1996 to 2003**, the rate at which smoking increased declined until 2003, where smoking rates actually declined. Smoking habits have continued to decline through 2010, where the rate was down 4.5% from the intercept. **Every year from 2004 to 2010 saw statistically significant declines in smoking rates.**
+
+Analyzing the state portions of the first regression, we see that most states have negative values in relation to 
+the intercept, showing that those states have lower `current_smokers` rates. A majority of which are statistically significant. The state of **Utah** stands out the most, with  a **-11.8** estimate, predicting that people in Utah 
+only smoke at half the rate of the regression's intercept. Conversely, **Kentucky** has the highest rate of current smokers, sitting at a statistically significant **+5.3** above the intercept. 
+
+In a prior visualization, we saw that the trends of never smoking were on the rise, while smoking every day was declining. We saw some statistical evidence proving this with our current smokers regression, but we can get straight to the point through regressing the never smoked variable. Using State and Year again, we used the variables to predict `Never smoked`. Through this regression (2), **we see that beginning in 2004, the rate of people never smoking is  significantly on the rise.** No less than 1.5% more people have never smoked through those years. In 2010, 4.3% more people had never smoked, showing a rising trend in people not smoking. 
+
+Similar to the results of the first regression, the states of Utah and Kentucky are on opposite ends. Utah has a **+17.9** estimate above the intercept, while Kentucky is **-6.1**, showing that less people never smoke in the state. 
+
+Classification: Alcohol and Tobacco {data-navmenu=Results}
+=======================================================================
+
+In this section, we more closely examine the relationship between alcohol and tobacco.
+
+
+Column
+-----------------------------------------------------------------------
+
+### Graphical Analysis
+
+```{r}
+alc_tobacco_data %>% mutate(smoking = smoke_everyday + smoke_some) %>%
+  ggplot(aes(x = ethanol_all_drinks_gallons_per_capita, y=smoking, size = population, colour = Region, label=state)) +
+  geom_point(aes(size = population, frame = year, ids = state), show.legend = FALSE) +
+  scale_color_viridis_d(guide = FALSE) +
+  scale_x_log10() +
+  labs(x = "Alcohol Consumption per Capita", y = "% Smokers", 
+       title = "Smoking and Alcohol Consumption",
+       subtitle = "1995-2010") +
+  theme(legend.position='none') +
+  theme_bw() -> bubbles
+
+fig <- ggplotly(bubbles)
+
+fig %>%
+  animation_opts(
+    frame = 1000,
+    easing = "linear",
+    redraw = FALSE,
+    mode = "afterall"
+  ) 
+fig
+
+```
+
+### Decision Tree - Predicting State's Substitutions between Substances
+
+```{r}
+alc_tobacco_data %>% mutate(smoke_status = ifelse(smoke_never > 0.5, 'Majority_non_Smokers', 'Majority_Smokers')) -> alc_tab_tr
+
+#split other users train and test data 
+set.seed(321)
+split = sort(sample(nrow(alc_tab_tr), nrow(alc_tab_tr)*.8))
+other_train <- alc_tab_tr[split,]
+other_test <- alc_tab_tr[-split,]
+
+#decision tree 
+decisiontree <- rpart(formula = smoke_status ~ ethanol_all_drinks_gallons_per_capita, 
+                      data = other_train,
+                      method  = "class")
+rpart.plot(decisiontree, yesno = 2, type = 1)
+```
+
+
+Column
+-----------------------------------------------------------------------
+
+### Graphical Analysis Description
+
+First, we visualize the consumption of both substances across states. The x-axis captures alcohol consumption, per capita, and the y-axis captures percentage of smokers. This dynamic bubble graph is extremely granular, as you will see by the the decimal changes in terms of the passing of the years. 
+
+The states have been grouped into four regions: Midwest (purple), Northeast (blue), South (green), and West (yellow).
+
+Generally, we see that states tend to smoke less over time, evidenced by the slow downward shift of all bubbles. Additionally, it is observed that alcohol consumption somewhat increases, evidenced by the slight shift of bubbles towards the right of the graph. 
+
+It is interesting to note how the South begins visually, quite higher than the other regions on the percentage of tobacco consumption from 1995 and onwards. While all regions decrease in tobacco use over time, the South still appears to hold the highest rates in 2010. With respect to alcohol consumption, the West ends off in 2010 with the lowest consumption per capita (nod to Utah, for the lowest rates of both tobacco and alcohol consumption!).
+
+### Decision Tree Description
+
+To corroborate the insights that we visually gleaned, we aimed to determine whether there are any substitutions of one substance for the other across states, over time. This leads us to the crux of our report: perhaps one of the most interesting models we have, we present a decision tree that aims to predict alcohol and tobacco use, and the inter-relations between the two substances.
+
+First, we created a binary variable called `smoke_status` from our `alc_tobacco_data` dataset such that if a state's population of those who never smoke equaled or exceeded 50%, they were assigned the label of `Majority_non_Smokers`. Naturally, if less than 50% of the population never smoked, those states were labelled as `Majority_Smokers`. 
+
+We split our new data, `alc_tab_tr`, into a train dataset and a test datatest, running our decision tree with the train data. We observe the following:
+
+- Of the 2% of states that drink more than 3.9 gallons of alcohol per capita, there's a 62% chance they will have more than the majority who smoke.
+
+- In contrast, of the 90% of states that drink between 1.8 and 3.9 gallons of alcohol per capita, there is a 15% chance of the population holding a majority of non smokers.
+
+- Moreover, for the 5% of states that do indeed consume less than 1.7 gallons of alcohol, there is a 15% chance they have a population wherein the majority does not smoke.
+
+- Finally, of the 3% of states consuming between 1.7 and 1.8 gallons of alcohol per capita, there is an 84% chance of those states having more than the majority who smoke.
+
+At the highest level, the decision tree output provides some evidence indicating that among states with high alcohol consumption, there is a higher probability for a lower percentage of tobacco consumption, and vice versa. To conclude, we used confusion matrices to assess the accuracy of classification; with train data, accuracy is 84% and with test data, accuracy is slightly and unsurprisingly lower at 79%.
+
+Column
+-----------------------------------------------------------------------
+
+### Confusion Matrix
+
+```{r, fig.height = 6}
+#confusion matrix w/ train
+smoke_predict <- predict(decisiontree, other_train, type = "class")
+confusionMatrix(as.factor(other_train$smoke_status), as.factor(smoke_predict)) #.84
+
+#confusion matrix w/ test
+smoke_predict2 <- predict(decisiontree, other_test, type = "class")
+confusionMatrix(as.factor(other_test$smoke_status), as.factor(smoke_predict2)) #.79
+```
+
+Column
+-----------------------------------------------------------------------
+
+### Confusion Matrix Description
+
+To conclude, we used confusion matrices to assess the accuracy of classification; with train data, accuracy is 84% and with test data, accuracy is slightly and unsurprisingly lower at 79%.
+
+Conclusion, References, and Attributions
+=======================================================================
+
+Column {.tabset .fade-tabset}
+-----------------------------------------------------------------------
+
+### Conclusion
+
+Recall that our initial hypothese were as follows: 
+**1) What are the preferred alcohol types at the national/regional/state levels? How has this changed over time?**
+- The U.S. is culturally known for being a "beer country" so we hypothesize that beer will be the most consumed alcohol at any given time. 
+
+*We find that alcohol consumption dips between 1995 and 2000, but then indeed increases afterwards, largely fueled by increase consumption per capita of wine and spirits. While beer remains the most consumed out of the three choices, consumption per gallon is decreasing relative to the other two alcoholic selections.*
+
+**2) How does tobacco consumption change at the national/regional/state levels, over time?**
+- Given the extensive public health campaigns that highlighted the negative effects of smoking cigarettes in the late 1990s and early 2000s, we expect to see smoking rates decline over time. 
+
+*Indeed, the data support our hypothesis: the rates of those who never smoke is increasing over time while the rates of those who smoke everyday is decreasing.*
+
+**3) Are there particular states that stand out, in terms of consumption of either substance?**
+- Since there are clear divisions of rural and urban areas within the US, which also follow closely to political identification, we predict the more rural areas of the country (South and Midwest) will drink and smoke more than the rest of the country, possibly due to conservative/traditional values and the lack of other, safer, legal alternatives.
+
+*Across all alcohol types, Utah and West Virginia have the lowest overall alcohol consumption rates whereas New Hampshire and Nevada have the highest rates. In terms of tobacco, Utah also consumes the least while Kentucky and West Virginia have the highest average consumption, over time. Nevada is still a relatively high consumer and New Hampshire is in the middle. This third hypothesis is also supported.*
+
+**4) Do there seem to be any substitutions between alcohol and tobacco?**
+- It is possible that the effectiveness of smoking campaigns results in smoking rates declining over time; thus, we hypothesize that, in turn, alcohol consumption rates would increase during and after this period. 
+
+*As per the output of the decision tree, we do observe, on average, mild substitution effects between tobacco and alcohol for some states, but not all.*
+
+### Policy Implications
+While the percentage of individuals who smoke tobacco everyday has indeed declined throughout the United States, alcohol consumption has increased since the mid-1990s.  With the consistent push to reduce tobacco consumption through increased taxes, educational campaigns, digital interventions, and other methods, policymakers should work to mitigate the impact of these substitution effects. 
+
+While tobacco consumption is trending downwards, it is still a very costly habit. Using data from 1997-2001, the CDC estimated the costs associated with smoking (e.g., due to lost productivity and health expenditures) exceed $167 billion annually, suggesting that anti-smoking campaigns present large opportunities for economic savings (CDC, 2005). One method to reduce tobacco consumption is through additional taxation. Importantly, however, this intervention has been associated with cross-price effects with alcohol. Specifically, higher cigarette prices were associated with indeed lower smoking rates, but also higher consumption of alcohol (Decker & Schwartz, 2000). While pricing was not measured in the present report, we did observe increases in alcohol consumption and decreased tobacco consumption over time. For this reason, cross-price effects should be further researched.
+
+Further, given the increase in alcohol consumption since the mid-1990s, legislation should be considered to combat this trend as well. Snyder et al. (2006) found that people between the ages of 15-26 who reported more exposure to alcohol advertisements consumed more alcohol than those who saw fewer or no such advertisements, on average. For this reason, legislation might be well-suited to target advertisement placement, or more directly, purchasing (e.g., taxes). Unlike the cross-price effect mentioned above, increased alcohol prices were shown to lower both alcohol and smoking participation (Decker & Schwartz, 2000). The uptick in alcohol consumption is a worthwhile trend to proactively address given costs associated with excessive alcohol consumption: alcoholism, lost productivity, health care expenses, and law enforcement.  
+
+In sum, the decrease in tobacco use is a promising trend given the large societal costs it imparts. More urgent, however, is the uptick in alcohol use. More should be done to understand the relationship between the two substances, including cross-price effects, and U.S.-based policies may benefit from re-evaluation.
+
+### References
+
+
+Alcohol.org. (n.d.). The Alcohol Industry in Data. Retrieved from https://www.alcohol.org/guides/the-alcohol-industry-in-data/#:~:text=Alcohol%20Market%20Share%20in%20America,(6%20percent)%20in%20wine
+
+Centers for Disease Control and Prevention (CDC). (2005). Annual smoking-attributable mortality, years of potential life lost, and productivity losses--United States, 1997-2001. *MMWR. Morbidity and mortality weekly report, 54*(25), 625-628.  
+
+Decker, S. L., & Schwartz, A. E. (2000). *Cigarettes and alcohol: Substitutes or complements?* (No. w7535). National Bureau of Economic Research.  
+
+Macinko, J., & Silver, D. (2015). Diffusion of impaired driving laws among US states. *American Journal of Public Health, 105*(9), 1893-1900.
+
+Snyder, L. B., Milici, F. F., Slater, M., Sun, H., & Strizhakova, Y. (2006). Effects of alcohol advertising exposure on drinking among youth. *Archives of Pediatrics and Adolescent Medicine, 160*(1), 18-24.  
+
+
+### Attributions
+
+This project was a collaborative effort among Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, and Jen Xue. While team members all contributed to commentary and problem-solved challenges along the way, key accomplishments by team member include:
+
+* Walid Hedidar: interactive sliding graphs, decision tree, alcohol graph generation
+* Aamia Malik: alcohol statistical analyses, alcohol graph generation
+* Michael Murphy: interactive sliding graphs, tobacco graph generation
+* Jon Sirota: dashboard creation, alcohol & tobacco dynamic bubble graph, alcohol visualizations
+* Cory Winkler: tobacco statistical analyses, tobacco graph generation
+* Jen Xue: alcohol & tobacco dynamic bubble graph, tobacco graph generation, project management
+
+All team members participated in code review, narrative formation, and dashboard quality checks.
