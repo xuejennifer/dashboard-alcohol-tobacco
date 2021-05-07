@@ -211,6 +211,7 @@ For each category of smokers from 1995 to 2000, we see that **the majority of pe
 
 Below, you can toggle the interactive sliders. In the *Alcohol Interactive Slider* (showing alcohol consumption trends over time), each state tends to alternate between increases and decreases in consumption. However, certain years are marked by widespread decreases, namely: 1982 to 1989, 1991, 1993, 2009, and 2010. In the *Tobacco Interactive Slider* (showing tobacco consumption trends over time), we see sporadic increases in some states. For example, Washington in 1996, California and Utah in 1997, and Maryland in 1998 all demonstrate steep increases. After 2005, states overwhelmingly decrease their smoking habits. By 2010, the final year, all but one state is shown to have a reduction in smoking.
 
+*Note.* This particular webpage has demonstrated a need for refreshing if the interactive sliders are not showing the first time.
 
 Row
 -----------------------------------------------------------------------
