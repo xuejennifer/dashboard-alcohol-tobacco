@@ -130,7 +130,7 @@ Row {.tabset .tabset-fade}
 
 ### Introducing the Motivation
 
-American healthcare institutions like the National Institutes of Health (NIH) and the Centers for Disease Control and Prevention (CDC) have meticulous datasets for alcohol and tobacco consumption in the United States. Yet, there are few analyses that look at the consumption of these substances side-by-side over time. In this project, we are interested in analyzing the longitudinal effects and patterns of alcohol and tobacco consumption in the U.S. at national, regional, and state levels. 
+American healthcare institutions like the National Institutes of Health (NIH) and the Centers for Disease Control and Prevention (CDC) have meticulous datasets for alcohol and tobacco consumption in the United States. Yet, there are few analyses that compare the consumption of these substances in tandem over time. In this project, we are interested in analyzing the longitudinal effects and patterns of alcohol and tobacco consumption in the U.S. at national, regional, and state levels. 
 
 We begin our investigation by examining alcohol and tobacco consumption trends separately at the national, regional, and state level; our analysis will transition into understanding joint trends across both substances and will be guided by the following questions and hypotheses:  
 
@@ -144,7 +144,7 @@ We begin our investigation by examining alcohol and tobacco consumption trends s
 
 **3) Are there particular states that stand out, in terms of consumption of either substance?**
 
-- Since there are clear divisions of rural and urban areas within the U.S., which also follow closely to political identification, we predict the more rural areas of the country (South and Midwest) will drink and smoke more than the rest of the country, possibly due to conservative/traditional values and the lack of other, safer, legal substance alternatives.
+- Since there are clear divisions of rural and urban areas within the U.S., which also follow closely to political identification, we predict the more rural areas of the country (South and Midwest) will drink and smoke more than the rest of the country, possibly due to conservative/traditional values and the lack of safer legal substance alternatives.
 
 **4) Do there seem to be any substitutions between alcohol and tobacco?**
 
@@ -152,11 +152,11 @@ We begin our investigation by examining alcohol and tobacco consumption trends s
 
 ### Our Methodology
 
-Our research methodology was driven by the aforementioned research questions. To start, we searched and obtained reputable sources for relevant data on alcohol and tobacco consumption in the United States. Next, we prepared the two datasets for analysis. To do that, we cleaned the datasets and appended them with necessary supplemental information, such as state code, corresponding region, and state population size. To learn more about the datasets used, please see [Navigating the Data and Analyses]. With the transformed datasets, we began our analysis, which used the following tools: 
+Our methodology was driven by the aforementioned research questions. To start, we searched and obtained reputable sources for relevant data on alcohol and tobacco consumption in the United States. Next, we prepared the two datasets for analyses. To do that, we cleaned the datasets and appended them with necessary supplemental information, such as state code, corresponding region, and state population size. To learn more about the datasets used, please see [Navigating the Data and Analyses]. With the transformed datasets, we began our analysis which used the following tools: 
 
 *1) Static and Dynamic Figures*
 
-These figures were made to visually capture alcohol and tobacco consumption trends (both together and separately) across time, states, and regions. Examples of graphs are as follows:
+These figures were made to visually capture alcohol and tobacco consumption trends (both together and separately) across time, states, and regions. Examples are as follows:
 
 - Line graphs, to capture trends over the years
 - Scatterplots, to visualize differences across states
@@ -168,14 +168,14 @@ These statistical analysis tools were used in order to examine the validity and 
 
 *3) Decision Tree and Confusion Matrix*
 
-These predictive modeling tools were used in order to examine the potential interdependence of the alcohol and tobacco consumption trends. Particularly, these tools were used to see if alcohol and tobacco consumption substituted each other or not.
+A predictive modeling/classification tool was used in order to examine the potential interdependence between alcohol and tobacco consumption trends. A decision tree was generated to determine whether alcohol and tobacco consumption substituted each other or not.
 
 
 ### Navigating the Data and Analyses
 
 For this investigation, we began manipulating data frames starting with two primary datasets: alcohol and tobacco.
 
-The **raw alcohol dataset** comes from the National Institute of Alcohol Abuse and Alcoholism, via the *National Institutes of Health*. It contains state-level information about total drinks consumed and gallons per capita consumed across all alcohol, as well as three specific types: beer, wine, and spirits. It contains data from 1977 to 2018.
+The **raw alcohol dataset** comes from the National Institute of Alcohol Abuse and Alcoholism, via the *National Institutes of Health*. It contains state-level information about total number of standard drinks consumed and gallons per capita consumed across all alcohol, as well as three specific types: beer, wine, and spirits. It contains data from 1977 to 2018.
 
 
 The **raw tobacco dataset** comes from a compilation of yearly surveys from the Behavioral Risk Factor Surveillance System, via the *CDC*. It contains state-level information about the percentage of people who fall in each of the following categories: smoke never, formerly, some days, and every day. It contains data from 1995 to 2010.
@@ -205,11 +205,11 @@ We begin with trends at the national level.
 
 As we can see in the figure below, overall alcohol consumption dropped in the mid-1990s, before continuing to increase. Of note, while beer is the most consumed, **consumption of beer is decreasing, whereas wine and spirits consumption appears to be increasing.** Nationally, consumption of spirits has almost overtaken beer consumption. 
 
-For each category of smokers from 1995 to 2000, we see that **the majority of people in the U.S. consistently report never smoking**. The percentages of people who smoke some days, as well as former smokers, remain quite flat in comparison to those who smoke every day, which decreases slightly over time; the rates of those who never smoke visually increases slightly from 2005 to 2010. At the national level, it appears that tobacco consumption is dropping, whereas alcohol consumption is increasing from its lows in the mid-1990s.
+In terms of the specific category of smokers from 1995 to 2000, we see that **the majority of people in the U.S. consistently report having never smoked**. The percentages of people who smoke some days, as well as former smokers, remain quite flat in comparison to those who smoke every day, which decreases slightly over time; the rates of those who never smoke visually increases slightly from 2005 to 2010. At the national level, it appears that tobacco consumption is dropping while alcohol consumption is increasing from the mid-1990s and onward.
 
 ***
 
-Below, you can toggle the interactive sliders. In the *Alcohol Interactive Slider* (showing alcohol consumption trends over time), each state tends to alternate between increases and decreases in consumption. However, certain years are marked by widespread decreases, namely: 1982 to 1989, 1991, 1993, 2009, and 2010. In the *Tobacco Interactive Slider* (showing tobacco consumption trends over time), we see sporadic increases in some states. For example, Washington in 1996, California and Utah in 1997, and Maryland in 1998 all demonstrate steep increases. After 2005, states overwhelmingly decrease their smoking habits. By 2010, the final year, all but one state is shown to have a reduction in smoking.
+Below, you can toggle the interactive sliders. In the *Alcohol Interactive Slider* (showing alcohol consumption trends over time), each state appears to alternate between increases and decreases in consumption. However, certain years are marked by widespread decreases, namely 1982 to 1989, 1991, 1993, 2009, and 2010. In the *Tobacco Interactive Slider* (showing tobacco consumption trends over time), we see sporadic increases in some states. For example, Washington in 1996, California and Utah in 1997, and Maryland in 1998 all demonstrate steep increases. After 2005, states overwhelmingly decrease their smoking habits. By 2010, the final year, all but one state is shown to have a reduction in smoking.
 
 *Note.* This particular webpage has demonstrated a need for refreshing if the interactive sliders are not showing the first time.
 
@@ -482,11 +482,11 @@ State Trends {data-navmenu=Results}
 Column {data-width=350} 
 -----------------------------------------------------------------------
 
-### **STATE TRENDS: States vary in consumption by alcohol type, over time while for tobacco, consumption across all states generally decreases.** 
+### **STATE TRENDS: States vary in consumption by alcohol type over time while for tobacco, consumption across all states generally decreases.** 
 
 Now, we begin a micro-level examination of consumption by state. 
 
-For overall alcohol consumption, we observe that *New Hampshire* and *Nevada* are consistently the two states with the highest average consumption. Interestingly, the states with the lowest consumption differ by type. Across all alcohol, *Utah* and *West Virginia* have the lowest overall alcohol consumption. With regards to consumption of specific alcohol types, *Connecticut* and *New York* appear to drink less beer on average. However, those same two states have a relatively high average consumption of wine and mixed preferences toward spirits. *Mississippi* and *Kansas* drink relatively less wine on average, but *Mississippi* is roughly in the middle in terms of beer consumption. 
+For overall alcohol consumption, we observe that *New Hampshire* and *Nevada* are consistently the two states with the highest average consumption in terms of gallons per capita. Interestingly, the states with the lowest consumption differ by type. Across all alcohol, *Utah* and *West Virginia* have the lowest overall alcohol consumption. With regards to consumption of specific alcohol types, *Connecticut* and *New York* appear to drink less beer on average. However, those same two states have a relatively high average consumption of wine and mixed preferences toward spirits. *Mississippi* and *Kansas* drink relatively less wine on average, but *Mississippi* is roughly in the middle in terms of beer consumption. 
 
 So, **while certain states simply have higher alcohol consumption across all types, other states have clear preferences for a certain type(s).** Almost every state drinks more beer than wine or liquor. This is likely due to its accessibility and relatively lower cost. 
 
@@ -606,12 +606,12 @@ ggplotly(tobstate)
 Statistical Analyses: Alcohol and Tobacco {data-navmenu=Results}
 =======================================================================
 
-#### **While visualizations are informative, we sought to corroborate our findings with statistical analyses. For the full regression outputs, please see the Appendix.**
+#### **While visualizations are informative, we sought to corroborate our findings with statistical analyses. For the full regression outputs, refer to the Appendix.**
 
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Regression: Alcohol (all)
+### Regression: Alcohol (All)
 
 ```{r include = FALSE}
 #overall
@@ -751,14 +751,14 @@ Row
 ### Alcohol Regression Interpretation
 
 
-The first model, which aims to understand changes in overall alcohol consumption over time, uses Year as a factor to predict the overall alcohol consumption, with the goal of determining whether there are significant changes over time; the overall consumption value, for all alcohol as well as the specific type of alcohol, was calculated by summing the number of standard drinks within a given year. To begin, we note that the intercept, which is for 1977, indicates estimated consumption as *29,651*. **The rate of total consumption increases until 1983**, after which consumption **significantly declines** through 2018. By 2018, the total amount of alcohol consumption was down by *2,414*, compared to 1977. All years were **statistically significant** in either the increases, from 1978 through to 1983, or the decreases, from 1984 onward, in the total amount of alcohol consumption, compared to 1977.
+The first alcohol regression model, which aims to understand changes in overall alcohol consumption over time, uses Year as a factor to predict the overall alcohol consumption, with the goal of determining whether there are significant changes over time; the overall consumption value, for all alcohol as well as the specific type of alcohol, was calculated by summing the number of standard drinks within a given year. To begin, we note that the intercept, which is for 1977, indicates estimated consumption as *29,651*. **The rate of total consumption increases until 1983**, after which consumption **significantly declines** through 2018. By 2018, the total amount of alcohol consumption was down by *2,414*, compared to 1977. All years were **statistically significant** in either the increases, from 1978 through to 1983, or the decreases, from 1984 onward, in the total amount of alcohol consumption, compared to 1977.
 
 More specifically, we can also examine the specific type of consumption. Beer consumption significantly increases every year from 1977, and is shown to decrease from 1993 onward. By 2018, the most recent year in our dataset, **beer consumption had decreased** by *2,465* across the United States, compared to the intercept's estimate. Next, estimates for the changes in **wine consumption do not show drastic increases or decreases across the years**; there is only a slight yet significant drop in wine consumption in 1993 and 1994, compared to the intercept's level. All other years show significant increases in wine consumption in relation to 1977. Lastly, **in terms of spirits, the model shows significant decreases in all years, compared to 1977.** Notably however, are the values of the raw estimates approximating each other in the recent years (i.e., leveling off: 2017 showed decrease of *2,188* standard spirit drinks compared to 1977, and 2018 showed a decrease of *2,080* compared to 1977).
 
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Regressions: Tobacco (Current Smoking)
+### Regressions: Tobacco (Current Smokers)
 
 ```{r include = FALSE}
 #create index
@@ -816,11 +816,11 @@ Row
 -----------------------------------------------------------------------
 ### Tobacco Regression Interpretation
 
-To get a better understanding of current smokers in each state, regardless of if it is an every day or sometimes smoking habit, we created a new variable `current_smokers`, which is the combination of the percentage of those who smoke some days and those who smoke everyday. This variable was indexed out of 100 to make further regressions more comprehensible. We also adjusted the variable of those who have `Never smoked` to match the formatting of `current_smokers`. Both variables now can be read as percentages, with *the current smoking rate being 24.6%, while 52.5% of people have never smoked.*  
+To get a better understanding of current smokers in each state, regardless of if it is an every day or sometimes smoking habit, we create a new variable `current_smokers`, which is the combination of the percentage of those who smoke some days and those who smoke everyday. This variable is indexed out of 100 to make further regressions more comprehensible. We also adjusted the variable of those who have `Never smoked` to match the formatting of `current_smokers`. Both variables now can be read as percentages, with the current smoking rate being 24.6%, while 52.5% of people have never smoked. 
 
-Our first regression (R$^2$ = .902) uses State and Year to predict the current smokers' percentage. Year is set as a factor, so we can understand year-to-year changes. The intercept, which captures the year 1995 and the state of Alabama, tells us that the estimated percentage of smokers is 24.6%. While smoking habits *rose from 1996 to 2003*, the rate at which smoking increased declined until 2003, where smoking rates declined. Smoking habits have continued to decline through 2010, where the rate was down 4.5% from the intercept. **Every year from 2004 to 2010 showed statistically significant declines in smoking rates.** Analyzing the state portions of the first regression, we see that most states have negative values concerning the intercept, showing that those states have lower rates of current smokers. A majority of which are statistically significant. The state of *Utah* stands out the most, with a *-11.8* estimate, predicting that people in Utah only smoke at half the rate of the regression's intercept. Conversely, *Kentucky* has the highest rate of current smokers, sitting at a statistically significant *+5.3* above the intercept. 
+Our first tobacco regression (R$^2$ = .902) uses State and Year to predict the current smokers' percentage. Year is set as a factor, so we can understand year-to-year changes. The intercept, which captures the year 1995 and the state of Alabama, tells us that the estimated percentage of smokers is 24.6%. While smoking habits *rose from 1996 to 2003*, the rate at which smoking increased declined until 2003, where smoking rates declined. Smoking habits have continued to decline through 2010, where the rate was down 4.5% from the intercept. **Every year from 2004 to 2010 showed statistically significant declines in smoking rates.** Through analyzing the state portions of this first model, we see that most states have negative values concerning the intercept, showing that those states have lower rates of current smokers. A majority of which are statistically significant. The state of *Utah* stands out the most, with a *-11.8* estimate, predicting that people in Utah only smoke at half the rate of the regression's intercept. Conversely, *Kentucky* has the highest rate of current smokers, sitting at a statistically significant *+5.3* above the intercept. 
 
-In a prior visualization, we saw that the trends of never smoking were on the rise while smoking every day was declining. We observed some statistical evidence proving this with our "Current smoker" regression, but we can get straight to the point through regressing the never smoked variable. Using State and Year again, we used the variables to predict `Never smoked` in a second regression. Through this model (R$^2$ = .831), **we see that beginning in 2004, the rate of people never smoking is significantly on the rise.** No less than 1.5% more people have never smoked through those years. In 2010, 4.3% more people had never smoked, showing a rising trend in people not smoking. Similar to the output of the first regression, the states of Utah and Kentucky are on opposite ends. Utah has a *+17.9* estimate above the intercept, while Kentucky is *-6.1*, showing that fewer people never smoke in the state. 
+In a prior visualization, we saw that the trends of never smoking were on the rise while smoking every day was declining. We observed some statistical evidence proving this with our first tobacco regression, but we can get straight to the point through regressing the never smoked variable. Using State and Year again, we used the variables to predict `Never smoked` in a second regression. Through this model (R$^2$ = .831), **we see that beginning in 2004, the rate of people never smoking is significantly on the rise.** No less than 1.5% more people have never smoked through those years. In 2010, 4.3% more people had never smoked, showing a rising trend in people not smoking. Similar to the output of the first regression, the states of Utah and Kentucky are on opposite ends. Utah has a *+17.9* estimate above the intercept, while Kentucky is *-6.1*, showing that fewer people never smoke in the state. 
 
 *Note.* The discussion of state differences is based on the full regression output which can be reviewed in the Appendix. The visualization above does not show this information.
 
@@ -843,7 +843,7 @@ alc_tobacco_data %>% mutate(smoking = (smoke_everyday + smoke_some)*100) %>%
   geom_point(aes(size = population, frame = year, ids = state), show.legend = FALSE) +
   scale_color_viridis_d(guide = FALSE) +
   scale_x_log10() +
-  labs(x = "Alcohol Consumption in Gallons per Capita", y = "% Smokers", 
+  labs(x = "Gallons per Capita", y = "% Smokers", 
        title = "Alcohol and Tobacco Consumption",
        subtitle = "1995-2010") +
   theme(legend.position='none') +
@@ -865,13 +865,13 @@ fig
 
 ### Dynamic Bubble Plot Interpretation
 
-First, we visualize the consumption of both substances across states. The x-axis captures alcohol consumption, in gallons per capita, and the y-axis captures the percentage of smokers. This dynamic bubble graph captures change in consumption from 1995-2010. 
+First, we visualize the consumption of both substances across states. The x-axis captures alcohol consumption, in gallons per capita, and the y-axis captures the percentage of smokers. This dynamic bubble plot captures change in consumption from 1995-2010. 
 
-The states are grouped into four regions: Midwest (purple), Northeast (blue), South (green), and West (yellow).
+Each state is represented as an individual bubble and each bubble is grouped into one of four regions: Midwest (purple), Northeast (blue), South (green), and West (yellow).
 
-Generally, we see that **states tend to smoke less over time**, evidenced by the slow downward shift of all bubbles. Additionally, it is observed that **alcohol consumption somewhat increases**, evidenced by the slight shift of bubbles towards the right of the graph. 
+Generally, we see that **states tend to smoke less over time**, evidenced by the slow downward shift of all bubbles. Additionally, it is observed that **alcohol consumption somewhat increases**, evidenced by the slight shift of bubbles towards the right of the plot. 
 
-It is interesting to note how the South begins visually, quite higher than the other regions on the percentage of tobacco consumption from 1995 and onwards. While *all regions* decrease in tobacco use over time, the South still appears to hold the highest rates in 2010. Concerning alcohol consumption, the West ends off in 2010 with the lowest consumption per capita (a nod to Utah, for the lowest rates of both tobacco and alcohol consumption!).
+It is interesting to note how the South begins visually, quite higher than the other regions on the percentage of tobacco consumption from 1995 and onwards. While *all regions* decrease in tobacco use over time, the South still appears to hold the highest rates in 2010. Concerning alcohol consumption, the West ends 2010 with the lowest consumption per capita (a nod to Utah, for the lowest rates of both tobacco and alcohol consumption!).
 
 
 Column
@@ -899,7 +899,7 @@ rpart.plot(decisiontree, yesno = 2, type = 1)
 
 ### Decision Tree Interpretation
 
-To corroborate the insights that we visually gleaned, we aimed to determine whether there were any substitutions of one substance for the other across states, over time. This leads us to the crux of our report: a decision tree that aims to predict alcohol and tobacco use and the inter-relations between the two substances.
+To corroborate the insights that we visually gleaned, we aimed to determine whether there were any substitutions of one substance for the other across states, over time. This leads us to the crux of our report: a decision tree that aims to predict alcohol and tobacco use and the interrelations between the two substances.
 
 First, we created a binary variable called `smoke_status` such that if a state's population of those who never smoke equaled or exceeded 50%, they were assigned the label of `Majority Non-smokers`. Naturally, if less than 50% of the population never smoked, those states were labeled as `Majority Smokers`. 
 
@@ -979,13 +979,13 @@ Recall that our initial hypotheses were as follows:
 
 **3) Since there are clear divisions of rural and urban areas within the U.S., which also follow closely to political identification and values, we predicted that the more rural areas of the country (South and Midwest) would drink and smoke more than the rest of the country.** 
 
-- *Across all alcohol types, Utah and West Virginia have the lowest overall alcohol consumption rates whereas New Hampshire and Nevada have the highest rates. In terms of tobacco, Utah consumes the least while Kentucky and West Virginia have the highest average consumption, over time. Nevada is still a relatively high consumer and New Hampshire is in the middle. The third hypothesis is supported.*
+- *Across all alcohol types, Utah and West Virginia have the lowest overall alcohol consumption rates whereas New Hampshire and Nevada have the highest rates. In terms of tobacco, Utah consumes the least while Kentucky and West Virginia have the highest average consumption, over time. Nevada is also a relatively high consumer while New Hampshire ranks towards the middle on tobacco consumption. The third hypothesis is supported.*
 
 
 
 **4) The effectiveness of smoking campaigns may result in smoking rates declining; thus, we hypothesized that, in turn, alcohol consumption rates and smoking rates might covary.** 
 
-- *As per the output of the decision tree, we do observe, on average, mild substitution effects between tobacco and alcohol for some states, but not all.*
+- *As per the output of the decision tree, we do observe, on average, mild substitution effects between tobacco and alcohol for some states.*
 
 ### Policy Implications
 
@@ -993,7 +993,7 @@ Recall that our initial hypotheses were as follows:
 
 Indeed, while the percentage of individuals who smoke tobacco every day has declined throughout the United States, *it remains a costly habit*. Using data from 1997 to 2001, the CDC estimated the costs associated with smoking (e.g., due to lost productivity and health expenditures) exceed $167 billion annually, suggesting that anti-smoking campaigns present large opportunities for economic savings (CDC, 2005). 
 
-One method to reduce tobacco consumption is through additional taxation. Importantly, however, this intervention has been associated with cross-price effects with alcohol. Specifically, higher cigarette prices were associated with indeed lower smoking rates, but also higher consumption of alcohol (Decker & Schwartz, 2000). While pricing was not measured in the present report, we did observe increases in alcohol consumption and decreased tobacco consumption over time. For this reason, *cross-price effects should be further researched*. FInally, with the consistent push to reduce tobacco consumption through educational campaigns, digital interventions, and other marketing methods, policymakers should work to mitigate the impact of these substitution effects. 
+One method to reduce tobacco consumption is through additional taxation. Importantly, however, this intervention has been associated with cross-price effects with alcohol. Specifically, higher cigarette prices were associated with indeed lower smoking rates, but also higher consumption of alcohol (Decker & Schwartz, 2000). While pricing was not measured in the present report, we did observe increases in alcohol consumption and decreased tobacco consumption over time. For this reason, *cross-price effects should be further researched*. Finally, with the consistent push to reduce tobacco consumption through educational campaigns, digital interventions, and other marketing methods, policymakers should work to mitigate the impact of these substitution effects. 
 
 **Alcohol**
 
@@ -1006,7 +1006,7 @@ In sum, the *decrease in tobacco use is a promising* trend given the large socie
 ### References
 
 
-Alcohol.org. *The Alcohol Industry in Data*. Retrieved from https://www.alcohol.org/guides/the-alcohol-industry-in-data/#:~:text=Alcohol%20Market%20Share%20in%20America,(6%20percent)%20in%20wine
+Alcohol.org. *The alcohol industry in data*. Retrieved from https://www.alcohol.org/guides/the-alcohol-industry-in-data/
 
 Centers for Disease Control and Prevention (CDC). (2005). Annual smoking-attributable mortality, years of potential life lost, and productivity losses--United States, 1997-2001. *MMWR. Morbidity and Mortality Weekly Report, 54*(25), 625-628.  
 
@@ -1037,7 +1037,7 @@ Appendix
 Row 
 -----------------------------------------------------------------------
 
-### Alcohol Regression - All types
+### Alcohol Regression - All
 
 ```{r}
 tbl_regression(alcohol_time, expontiate = TRUE)
@@ -1082,7 +1082,7 @@ tbl_regression(lm_smoke_yearstate, expontiate = TRUE)
 Row 
 -----------------------------------------------------------------------
 
-### Tobacco Regression - Never Smokers
+### Tobacco Regression - Never Smoked
 
 ```{r}
 tbl_regression(lm_never_yearstate, expontiate = TRUE)
