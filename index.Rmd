@@ -865,7 +865,7 @@ fig
 
 ### Dynamic Bubble Plot Interpretation
 
-First, we visualize the consumption of both substances across states. The x-axis captures alcohol consumption, in gallons per capita, and the y-axis captures the percentage of smokers. This dynamic bubble plot captures change in consumption from 1995-2010. 
+First, we visualize the consumption of both substances across states. The x-axis captures alcohol consumption, in gallons per capita, and the y-axis captures the percentage of smokers. This dynamic bubble plot captures change in consumption from 1995 to 2010. 
 
 Each state is represented as an individual bubble and each bubble is grouped into one of four regions: Midwest (purple), Northeast (blue), South (green), and West (yellow).
 
