@@ -952,7 +952,7 @@ Column
 
 To conclude, we used a confusion matrix to assess the accuracy of classification. We find that with test data, accuracy is **77%**. Please see the Appendix for the full confusion matrix output. 
 
-*Note.* While not shown in this present report, accuracy was unsurprisingly, slighty higher at 84% with train data.
+*Note.* While not shown in this present report, accuracy was unsurprisingly, slightly higher at 84% with train data.
 
 
 Conclusion, References, and Attributions
